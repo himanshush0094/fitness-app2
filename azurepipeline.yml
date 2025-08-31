@@ -1,29 +1,32 @@
 trigger:
-- main   # ya jo bhi branch tu deploy karna chahta hai
+- main
 
 pool:
-  vmImage: 'windows-latest'   # Azure hosted agent
+  vmImage: 'windows-latest'
 
 variables:
-  buildConfiguration: 'Release'
-  publishDir: '$(Build.ArtifactStagingDirectory)/publish'
+- group: FitnessApp-Variables   # Library se variables le raha hai
+- name: buildConfiguration
+  value: 'Release'
+- name: publishDir
+  value: '$(Build.ArtifactStagingDirectory)/publish'
 
 steps:
-# Step 1: Checkout
+# Step 1: Install .NET SDK
 - task: UseDotNet@2
   inputs:
     packageType: 'sdk'
-    version: '8.0.x'    # .NET 8 (ya project ki version)
+    version: '8.0.x'
 
-# Step 2: Restore dependencies
+# Step 2: Restore
 - script: dotnet restore
   displayName: 'Restore packages'
 
-# Step 3: Build project
+# Step 3: Build
 - script: dotnet build --configuration $(buildConfiguration) --no-restore
   displayName: 'Build project'
 
-# Step 4: Publish project
+# Step 4: Publish
 - script: dotnet publish --configuration $(buildConfiguration) --no-restore --output $(publishDir)
   displayName: 'Publish project'
 
@@ -34,9 +37,10 @@ steps:
     ArtifactName: 'drop'
     publishLocation: 'Container'
 
-# Step 6: Deploy to Azure App Service
+# Step 6: Deploy to App Service (variables from Library)
 - task: AzureWebApp@1
   inputs:
-    azureSubscription: 'DevOpsAR'
-    appName: '<Your-App-Service-Name>'
+    azureSubscription: '$(azureServiceConnection)'
+    appName: '$(appServiceName)'
     package: '$(publishDir)'
+
