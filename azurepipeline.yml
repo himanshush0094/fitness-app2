@@ -10,37 +10,56 @@ variables:
   value: 'Release'
 - name: publishDir
   value: '$(Build.ArtifactStagingDirectory)/publish'
+- name: projectPath
+  value: '**/*.csproj'   # Explicitly project path define kiya
 
 steps:
 # Step 1: Install .NET SDK
 - task: UseDotNet@2
+  displayName: 'Install .NET 8 SDK'
   inputs:
     packageType: 'sdk'
     version: '8.0.x'
+    includePreviewVersions: true
 
 # Step 2: Restore
-- script: dotnet restore
-  displayName: 'Restore packages'
+- task: DotNetCoreCLI@2
+  displayName: 'Restore NuGet packages'
+  inputs:
+    command: 'restore'
+    projects: '$(projectPath)'
 
 # Step 3: Build
-- script: dotnet build --configuration $(buildConfiguration) --no-restore
+- task: DotNetCoreCLI@2
   displayName: 'Build project'
+  inputs:
+    command: 'build'
+    projects: '$(projectPath)'
+    arguments: '--configuration $(buildConfiguration) --no-restore'
 
 # Step 4: Publish
-- script: dotnet publish --configuration $(buildConfiguration) --no-restore --output $(publishDir)
+- task: DotNetCoreCLI@2
   displayName: 'Publish project'
+  inputs:
+    command: 'publish'
+    projects: '$(projectPath)'
+    arguments: '--configuration $(buildConfiguration) --no-restore --output $(publishDir)'
 
-# Step 5: Publish artifacts (optional)
+# Step 5: Publish artifacts
 - task: PublishBuildArtifacts@1
+  displayName: 'Publish artifacts'
   inputs:
     PathtoPublish: '$(publishDir)'
     ArtifactName: 'drop'
     publishLocation: 'Container'
 
-# Step 6: Deploy to App Service (variables from Library)
+# Step 6: Deploy to Azure App Service
 - task: AzureWebApp@1
+  displayName: 'Deploy to Azure App Service'
   inputs:
     azureSubscription: '$(azureServiceConnection)'
     appName: '$(appServiceName)'
     package: '$(publishDir)'
+    deploymentMethod: 'auto'
+
 
