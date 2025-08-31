@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "dgSpecHash": "QyfFKConxZc=",
+  "success": true,
+  "projectFilePath": "/Users/himu/Application repo/Application project/FitnessApp/FitnessApp.csproj",
+  "expectedPackageFiles": [
+    "/Users/himu/.nuget/packages/microsoft.aspnetcore.openapi/9.0.8/microsoft.aspnetcore.openapi.9.0.8.nupkg.sha512",
+    "/Users/himu/.nuget/packages/microsoft.openapi/1.6.17/microsoft.openapi.1.6.17.nupkg.sha512"
+  ],
+  "logs": []
+}
