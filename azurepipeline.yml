@@ -11,6 +11,8 @@ variables:
   value: '$(Build.ArtifactStagingDirectory)/publish'
 - name: projectPath
   value: '**/*.csproj'
+- name: nupkgDir
+  value: '$(Build.ArtifactStagingDirectory)/nupkg'
 
 steps:
 # Step 1: Install .NET SDK
@@ -44,7 +46,24 @@ steps:
     projects: '$(projectPath)'
     arguments: '--configuration $(buildConfiguration) --output $(publishDir) --no-restore'
 
-# Step 5: Publish artifacts (optional)
+# Step 5: Pack project into NuGet package
+- task: DotNetCoreCLI@2
+  displayName: 'Pack project into NuGet package'
+  inputs:
+    command: 'pack'
+    packagesToPack: '$(projectPath)'
+    configuration: 'Release'
+    outputDir: '$(nupkgDir)'
+
+# Step 6: Push NuGet package to Azure Artifacts Feed
+- task: NuGetCommand@2
+  displayName: 'Push NuGet package to Azure Artifacts Feed'
+  inputs:
+    command: 'push'
+    packagesToPush: '$(nupkgDir)/*.nupkg'
+    publishVstsFeed: 'FitnessAppPackages'
+
+# Step 7: Publish build artifacts (optional)
 - task: PublishBuildArtifacts@1
   displayName: 'Publish build artifacts'
   inputs:
@@ -52,16 +71,32 @@ steps:
     ArtifactName: 'drop'
     publishLocation: 'Container'
 
-# Step 6: Deploy to Azure App Service
+# Step 8: Restore package from Azure Artifacts feed
+- task: NuGetCommand@2
+  displayName: 'Restore FitnessApp package from feed'
+  inputs:
+    command: restore
+    restoreSolution: '**/*.sln'
+    feedsToUse: select
+    vstsFeed: 'FitnessAppPackages'
+
+# Step 9: Download previously published DLLs artifact (optional)
+- task: DownloadPipelineArtifact@2
+  displayName: 'Download DLLs artifact'
+  inputs:
+    artifact: 'FitnessAppDLLs'
+    path: '$(Build.SourcesDirectory)/fitnessapp_dlls'
+
+# Step 10: Deploy to Azure App Service
 - task: AzureWebApp@1
   displayName: 'Deploy to Azure App Service'
   inputs:
     azureSubscription: '$(azureServiceConnection)'
     appName: '$(appServiceName)'
-    package: '$(publishDir)/*'          # <-- Important: publish folder ke andar saari files deploy hongi
+    package: '$(Build.SourcesDirectory)/fitnessapp_dlls/*'
     deploymentMethod: 'auto'
-    takeAppOfflineFlag: true             # <-- App offline while deploying
-    enableCustomDeployment: true         # <-- Ensure zip extract automatically
+    takeAppOfflineFlag: true
+    enableCustomDeployment: true
 
 
 
