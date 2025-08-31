@@ -1,0 +1,42 @@
+trigger:
+- main   # ya jo bhi branch tu deploy karna chahta hai
+
+pool:
+  vmImage: 'windows-latest'   # Azure hosted agent
+
+variables:
+  buildConfiguration: 'Release'
+  publishDir: '$(Build.ArtifactStagingDirectory)/publish'
+
+steps:
+# Step 1: Checkout
+- task: UseDotNet@2
+  inputs:
+    packageType: 'sdk'
+    version: '8.0.x'    # .NET 8 (ya project ki version)
+
+# Step 2: Restore dependencies
+- script: dotnet restore
+  displayName: 'Restore packages'
+
+# Step 3: Build project
+- script: dotnet build --configuration $(buildConfiguration) --no-restore
+  displayName: 'Build project'
+
+# Step 4: Publish project
+- script: dotnet publish --configuration $(buildConfiguration) --no-restore --output $(publishDir)
+  displayName: 'Publish project'
+
+# Step 5: Publish artifacts (optional)
+- task: PublishBuildArtifacts@1
+  inputs:
+    PathtoPublish: '$(publishDir)'
+    ArtifactName: 'drop'
+    publishLocation: 'Container'
+
+# Step 6: Deploy to Azure App Service
+- task: AzureWebApp@1
+  inputs:
+    azureSubscription: 'DevOpsAR'
+    appName: '<Your-App-Service-Name>'
+    package: '$(publishDir)'
