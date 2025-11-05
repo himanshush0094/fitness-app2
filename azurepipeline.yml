@@ -2,7 +2,6 @@ trigger: none
 
 pool:
   vmImage: 'windows-latest'
-
 variables:
 - group: FitnessApp-Variables
 - name: buildConfiguration
