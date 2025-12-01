@@ -1,0 +1,1 @@
+[![Build Status](https://dev.azure.com/HimanshuSharma1304/Application%20project/_apis/build/status%2Fhimanshush0094.fitness-app2?branchName=main)](https://dev.azure.com/HimanshuSharma1304/Application%20project/_build/latest?definitionId=7&branchName=main)
