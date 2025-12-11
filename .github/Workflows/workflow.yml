@@ -1,0 +1,24 @@
+name: PipelineWorkflow
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  Build:
+    name: Azure pipelines
+    runs-on: ubuntu-latest
+    steps:
+      - name: azure pipelineaction
+        uses: Azure/pipeline@v1
+        with:
+          azure-devops-project-url: "https://dev.azure.com/HimanshuSharma1304/Application%20project"
+          azure-pipeline-name: "fitness_app2"
+          azure-devops-token: ${{ secrets.AZURE_DEVOPS_TOKEN }}
+          
+    
+
